@@ -57,7 +57,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         continue
 
                     special_exam_attempt_context = None
-                    
+
                     # if exam waffle flag enabled, then use exams logic
                     if exams_ida_enabled(self.course_key):
                         # add short description based on exam type
@@ -99,7 +99,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                     if special_exam_attempt_context:
                         # Return exactly the same format as the edx_proctoring API response
                         sequences[sequence.usage_key] = special_exam_attempt_context
-                    
+                        
         return SpecialExamAttemptData(
             sequences=sequences,
         )
