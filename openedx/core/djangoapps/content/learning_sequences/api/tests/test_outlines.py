@@ -1083,7 +1083,7 @@ class SpecialExamsTestCase(OutlineProcessorTestCase):  # lint-amnesty, pylint: d
 
         # Ensure that no calls are made to get_attempt_status_summary
         assert mock_get_attempt_status_summary.call_count == 0
-        
+
     @override_waffle_flag(EXAMS_IDA, active=True)
     @patch.dict(settings.FEATURES, {'ENABLE_SPECIAL_EXAMS': True})
     def test_special_exam_attempt_data_exam_type(self):

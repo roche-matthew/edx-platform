@@ -99,7 +99,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                     if special_exam_attempt_context:
                         # Return exactly the same format as the edx_proctoring API response
                         sequences[sequence.usage_key] = special_exam_attempt_context
-                        
+
         return SpecialExamAttemptData(
             sequences=sequences,
         )
