@@ -57,17 +57,17 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         continue
 
                     special_exam_attempt_context = None
-                    # todo: move logic to helper method
+                    
                     # if exam waffle flag enabled, then use exams logic
                     if exams_ida_enabled(self.course_key):
-                        # short description based on exam type
+                        # add short description based on exam type
                         if sequence.exam.is_practice_exam:
                             exam_type = gettext_noop('Practice Exam')
                         elif sequence.exam.is_proctored_enabled:
                             exam_type = gettext_noop('Proctored Exam')
                         elif sequence.exam.is_time_limited:
                             exam_type = gettext_noop('Timed Exam')
-                        # todo: probably don't need this default
+                        # todo: Do I need this default?
                         else:
                             exam_type = gettext_noop('Exam')
 
@@ -78,9 +78,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         })
 
                         special_exam_attempt_context = summary
-                        print(special_exam_attempt_context)
-                        # todo: use edx-when since it's tied to platform for dates?rned?
-                        # todo: what about due date? where is this coming from?
+                        # todo: what about due date? Do I need to include this from edx-when?
                     else:
                         try:
                             # Calls into edx_proctoring subsystem to get relevant special exam information.
@@ -100,10 +98,8 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
 
                     if special_exam_attempt_context:
                         # Return exactly the same format as the edx_proctoring API response
-                        # todo: note that key is usage key and value is dict (special exam attempt context)
                         sequences[sequence.usage_key] = special_exam_attempt_context
                     
-                    print(special_exam_attempt_context)
         return SpecialExamAttemptData(
             sequences=sequences,
         )
