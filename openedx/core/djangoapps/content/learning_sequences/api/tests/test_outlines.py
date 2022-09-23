@@ -1087,19 +1087,18 @@ class SpecialExamsTestCase(OutlineProcessorTestCase):  # lint-amnesty, pylint: d
     
     @override_waffle_flag(EXAMS_IDA, active=True)
     @patch.dict(settings.FEATURES, {'ENABLE_SPECIAL_EXAMS': True})
-    def test_special_exam_attempt_data_exams_type(self):
+    def test_special_exam_attempt_data_exam_type(self):
         _, student_details, _ = self.get_details(
             datetime(2020, 5, 25, tzinfo=timezone.utc)
         )
 
         # Ensure that exam type is correct
         for sequence_key in self.get_sequence_keys(exclude=[self.seq_normal_key]):
-            assert True
             assert sequence_key in student_details.special_exam_attempts.sequences
             attempt_summary = student_details.special_exam_attempts.sequences[sequence_key]
             assert type(attempt_summary) == dict  # lint-amnesty, pylint: disable=unidiomatic-typecheck
-            # assert attempt_summary["summary"]["usage_key"] == str(sequence_key)
-            # todo: assert that exam type short description is correct
+            assert attempt_summary["suggested_icon"] == "fa-pencil-square-o"
+            assert "Exam" in attempt_summary["short_description"]
 
 
 class VisbilityTestCase(OutlineProcessorTestCase):

@@ -78,6 +78,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         })
 
                         special_exam_attempt_context = summary
+                        print(special_exam_attempt_context)
                         # todo: use edx-when since it's tied to platform for dates?rned?
                         # todo: what about due date? where is this coming from?
                     else:
@@ -101,7 +102,8 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         # Return exactly the same format as the edx_proctoring API response
                         # todo: note that key is usage key and value is dict (special exam attempt context)
                         sequences[sequence.usage_key] = special_exam_attempt_context
-
+                    
+                    print(special_exam_attempt_context)
         return SpecialExamAttemptData(
             sequences=sequences,
         )
