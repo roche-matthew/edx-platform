@@ -67,8 +67,8 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                             exam_type = gettext_noop('Proctored Exam')
                         elif sequence.exam.is_time_limited:
                             exam_type = gettext_noop('Timed Exam')
-                        # todo: Do I need this default?
-                        else:
+                        else: # sets a default, though considered impossible
+                            log.info('Using a default value, but it is considered impossible.')
                             exam_type = gettext_noop('Exam')
 
                         summary = {}
@@ -78,7 +78,6 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                         })
 
                         special_exam_attempt_context = summary
-                        # todo: what about due date? Do I need to include this from edx-when?
                     else:
                         try:
                             # Calls into edx_proctoring subsystem to get relevant special exam information.
