@@ -67,7 +67,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                             exam_type = gettext_noop('Proctored Exam')
                         elif sequence.exam.is_time_limited:
                             exam_type = gettext_noop('Timed Exam')
-                        else: # sets a default, though considered impossible
+                        else:  # sets a default, though considered impossible
                             log.info('Using a default value, but it is considered impossible.')
                             exam_type = gettext_noop('Exam')
 
