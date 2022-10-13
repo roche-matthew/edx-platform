@@ -116,7 +116,7 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
         For special exams, add the special exam information to the course blocks.
         """
         special_exam_attempt_context = None
-        
+
         # if exams waffle flag enabled, get exam type internally
         if exams_ida_enabled(block_key.course_key):
             # add short description based on exam type
@@ -132,7 +132,7 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
 
             summary = {'short_description': exam_type,}
             special_exam_attempt_context = summary
-        else: 
+        else:
             try:
                 # Calls into edx_proctoring subsystem to get relevant special exam information.
                 # This will return None, if (user, course_id, content_id) is not applicable.
@@ -141,7 +141,7 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
                     str(block_key.course_key),
                     str(block_key)
                 )
-                
+
             except ProctoredExamNotFoundException as ex:
                 log.exception(ex)
 
