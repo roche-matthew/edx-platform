@@ -1096,7 +1096,6 @@ class SpecialExamsTestCase(OutlineProcessorTestCase):  # lint-amnesty, pylint: d
             assert sequence_key in student_details.special_exam_attempts.sequences
             attempt_summary = student_details.special_exam_attempts.sequences[sequence_key]
             assert type(attempt_summary) == dict  # lint-amnesty, pylint: disable=unidiomatic-typecheck
-            assert attempt_summary["suggested_icon"] == "fa-pencil-square-o"
             assert "Exam" in attempt_summary["short_description"]
 
 

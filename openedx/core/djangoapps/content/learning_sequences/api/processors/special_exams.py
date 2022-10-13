@@ -58,27 +58,20 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
 
                     special_exam_attempt_context = None
 
-                    # if exam waffle flag enabled, then use exams logic
-                    if True: #exams_ida_enabled(self.course_key):
+                    # if exams waffle flag enabled, get exam type internally
+                    if exams_ida_enabled(self.course_key):
                         # add short description based on exam type
                         if sequence.exam.is_practice_exam:
                             exam_type = gettext_noop('Practice Exam')
                         elif sequence.exam.is_proctored_enabled:
-                            # exam_type = gettext_noop('Proctored Exam')
-                            exam_type = gettext_noop('P p p p p p p')
+                            exam_type = gettext_noop('Proctored Exam')
                         elif sequence.exam.is_time_limited:
-                            # exam_type = gettext_noop('Timed Exam')
-                            exam_type = gettext_noop('T t t t t t')
+                            exam_type = gettext_noop('Timed Exam')
                         else:  # sets a default, though considered impossible
                             log.info('Using a default value, but it is considered impossible.')
                             exam_type = gettext_noop('Exam')
 
-                        summary = {}
-                        summary.update({
-                            'short_description': _(exam_type),
-                            'suggested_icon': 'fa-pencil-square-o'
-                        })
-
+                        summary = {'short_description': _(exam_type),}
                         special_exam_attempt_context = summary
                     else:
                         try:
