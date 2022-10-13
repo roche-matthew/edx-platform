@@ -71,7 +71,7 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                             log.info('Using a default value, but it is considered impossible.')
                             exam_type = gettext_noop('Exam')
 
-                        summary = {'short_description': _(exam_type),}
+                        summary = {'short_description': _(exam_type), }
                         special_exam_attempt_context = summary
                     else:
                         try:

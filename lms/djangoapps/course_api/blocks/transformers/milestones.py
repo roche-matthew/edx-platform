@@ -130,7 +130,7 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
                 log.info('Using a default value, but it is considered impossible.')
                 exam_type = _('Exam')
 
-            summary = {'short_description': exam_type,}
+            summary = {'short_description': exam_type, }
             special_exam_attempt_context = summary
         else:
             try:
