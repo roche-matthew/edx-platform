@@ -226,7 +226,7 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
         )
         assert set(block_structure.get_block_keys()) == set(self.get_block_key_set(self.blocks, *expected_blocks))
 
-    # @override_waffle_flag(EXAMS_IDA, active=False)
+    @override_waffle_flag(EXAMS_IDA, active=False)
     @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.special_exams.get_attempt_status_summary')
     def test_exams_ida_flag_off(self, mock_get_attempt_status_summary):
         self.transformers = BlockStructureTransformers([self.TRANSFORMER_CLASS_TO_TEST(True)])
