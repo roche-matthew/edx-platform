@@ -62,16 +62,16 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                     if exams_ida_enabled(self.course_key):
                         # add short description based on exam type
                         if sequence.exam.is_practice_exam:
-                            exam_type = gettext_noop('Practice Exam')
+                            exam_type = _('Practice Exam')
                         elif sequence.exam.is_proctored_enabled:
-                            exam_type = gettext_noop('Proctored Exam')
+                            exam_type = _('Proctored Exam')
                         elif sequence.exam.is_time_limited:
-                            exam_type = gettext_noop('Timed Exam')
+                            exam_type = _('Timed Exam')
                         else:  # sets a default, though considered impossible
                             log.info('Using a default value, but it is considered impossible.')
-                            exam_type = gettext_noop('Exam')
+                            exam_type = _('Exam')
 
-                        summary = {'short_description': _(exam_type), }
+                        summary = {'short_description': exam_type, }
                         special_exam_attempt_context = summary
                     else:
                         try:
