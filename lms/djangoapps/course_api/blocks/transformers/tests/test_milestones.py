@@ -239,7 +239,7 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
 
         # Ensure that call is made to get_attempt_status_summary
         assert mock_get_attempt_status_summary.call_count > 0
-    
+
     @override_waffle_flag(EXAMS_IDA, active=True)
     @patch('lms.djangoapps.course_api.blocks.transformers.milestones.get_attempt_status_summary')
     def test_exams_ida_flag_on(self, mock_get_attempt_status_summary):
@@ -253,4 +253,3 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
 
         # Ensure that no calls are made to get_attempt_status_summary
         assert mock_get_attempt_status_summary.call_count == 0
-

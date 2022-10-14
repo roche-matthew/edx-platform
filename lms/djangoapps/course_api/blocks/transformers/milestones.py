@@ -116,8 +116,8 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
         For special exams, add the special exam information to the course blocks.
         """
         special_exam_attempt_context = self._generate_special_exam_attempt_context(
-            block_key, 
-            block_structure, 
+            block_key,
+            block_structure,
             usage_info
         )
 
@@ -168,7 +168,7 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
             return True
 
         return False
-    
+
     def _generate_special_exam_attempt_context(self, block_key, block_structure, usage_info):
         """
         Helper method which generates the special exam attempt context.
@@ -203,7 +203,5 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
 
             except ProctoredExamNotFoundException as ex:
                 log.exception(ex)
-        
-        return special_exam_attempt_context
 
-    
+        return special_exam_attempt_context
