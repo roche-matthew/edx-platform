@@ -14,6 +14,7 @@ from lms.djangoapps.course_blocks.api import get_course_blocks
 from lms.djangoapps.course_blocks.transformers.tests.helpers import CourseStructureTestCase
 from lms.djangoapps.gating import api as lms_gating_api
 from openedx.core.djangoapps.content.block_structure.transformers import BlockStructureTransformers
+from openedx.core.djangoapps.course_apps.toggles import EXAMS_IDA
 from openedx.core.lib.gating import api as gating_api
 
 from ..milestones import MilestonesAndSpecialExamsTransformer
