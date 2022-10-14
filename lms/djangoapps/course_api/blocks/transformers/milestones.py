@@ -115,35 +115,11 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
         """
         For special exams, add the special exam information to the course blocks.
         """
-        special_exam_attempt_context = None
-
-        # if exams waffle flag enabled, get exam type internally
-        if exams_ida_enabled(block_key.course_key):
-            # add short description based on exam type
-            if block_structure.get_xblock_field(block_key, 'is_practice_exam'):
-                exam_type = _('Practice Exam')
-            elif block_structure.get_xblock_field(block_key, 'is_proctored_enabled'):
-                exam_type = _('Proctored Exam')
-            elif block_structure.get_xblock_field(block_key, 'is_timed_exam'):
-                exam_type = _('Timed Exam')
-            else:  # sets a default, though considered impossible
-                log.info('Using a default value, but it is considered impossible.')
-                exam_type = _('Exam')
-
-            summary = {'short_description': exam_type, }
-            special_exam_attempt_context = summary
-        else:
-            try:
-                # Calls into edx_proctoring subsystem to get relevant special exam information.
-                # This will return None, if (user, course_id, content_id) is not applicable.
-                special_exam_attempt_context = get_attempt_status_summary(
-                    usage_info.user.id,
-                    str(block_key.course_key),
-                    str(block_key)
-                )
-
-            except ProctoredExamNotFoundException as ex:
-                log.exception(ex)
+        special_exam_attempt_context = self._generate_special_exam_attempt_context(
+            block_key, 
+            block_structure, 
+            usage_info
+        )
 
         if special_exam_attempt_context:
             # This user has special exam context for this block so add it.
@@ -192,3 +168,42 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
             return True
 
         return False
+    
+    def _generate_special_exam_attempt_context(self, block_key, block_structure, usage_info):
+        """
+        Helper method which generates the special exam attempt context.
+        Either calls into proctoring or, if exams ida waffle flag on, then get internally.
+        """
+        special_exam_attempt_context = None
+
+        # if exams waffle flag enabled, get exam type internally
+        if exams_ida_enabled(block_key.course_key):
+            # add short description based on exam type
+            if block_structure.get_xblock_field(block_key, 'is_practice_exam'):
+                exam_type = _('Practice Exam')
+            elif block_structure.get_xblock_field(block_key, 'is_proctored_enabled'):
+                exam_type = _('Proctored Exam')
+            elif block_structure.get_xblock_field(block_key, 'is_timed_exam'):
+                exam_type = _('Timed Exam')
+            else:  # sets a default, though considered impossible
+                log.info('Using a default value, but it is considered impossible.')
+                exam_type = _('Exam')
+
+            summary = {'short_description': exam_type, }
+            special_exam_attempt_context = summary
+        else:
+            try:
+                # Calls into edx_proctoring subsystem to get relevant special exam information.
+                # This will return None, if (user, course_id, content_id) is not applicable.
+                special_exam_attempt_context = get_attempt_status_summary(
+                    usage_info.user.id,
+                    str(block_key.course_key),
+                    str(block_key)
+                )
+
+            except ProctoredExamNotFoundException as ex:
+                log.exception(ex)
+        
+        return special_exam_attempt_context
+
+    

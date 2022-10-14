@@ -9,6 +9,7 @@ import ddt
 from milestones.tests.utils import MilestonesTestCaseMixin
 
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory
+from edx_toggles.toggles.testutils import override_waffle_flag
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from lms.djangoapps.course_blocks.transformers.tests.helpers import CourseStructureTestCase
 from lms.djangoapps.gating import api as lms_gating_api
@@ -223,3 +224,20 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
             self.transformers,
         )
         assert set(block_structure.get_block_keys()) == set(self.get_block_key_set(self.blocks, *expected_blocks))
+
+    # @override_waffle_flag(EXAMS_IDA, active=False)
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.special_exams.get_attempt_status_summary')
+    def test_exams_ida_flag_off(self, mock_get_attempt_status_summary):
+        self.get_blocks_and_check_against_expected(self.staff, self.ALL_BLOCKS)
+
+        # Ensure that call is made to get_attempt_status_summary
+        assert mock_get_attempt_status_summary.call_count > 0
+    
+    @override_waffle_flag(EXAMS_IDA, active=True)
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.special_exams.get_attempt_status_summary')
+    def test_exams_ida_flag_on(self, mock_get_attempt_status_summary):
+        self.get_blocks_and_check_against_expected(self.staff, self.ALL_BLOCKS)
+
+        # Ensure that no calls are made to get_attempt_status_summary
+        assert mock_get_attempt_status_summary.call_count == 0
+
