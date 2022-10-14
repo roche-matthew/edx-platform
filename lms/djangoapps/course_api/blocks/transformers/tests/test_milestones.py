@@ -229,7 +229,13 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
     # @override_waffle_flag(EXAMS_IDA, active=False)
     @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.special_exams.get_attempt_status_summary')
     def test_exams_ida_flag_off(self, mock_get_attempt_status_summary):
-        self.get_blocks_and_check_against_expected(self.staff, self.ALL_BLOCKS)
+        self.transformers = BlockStructureTransformers([self.TRANSFORMER_CLASS_TO_TEST(True)])
+        self.course.enable_subsection_gating = True
+        self.setup_gated_section(self.blocks['H'], self.blocks['A'])
+        expected_blocks = (
+            'course', 'A', 'B', 'C', 'ProctoredExam', 'D', 'E', 'PracticeExam', 'F', 'G', 'TimedExam', 'J', 'K', 'H',
+            'I')  # lint-amnesty, pylint: disable=line-too-long
+        self.get_blocks_and_check_against_expected(self.user, expected_blocks)
 
         # Ensure that call is made to get_attempt_status_summary
         assert mock_get_attempt_status_summary.call_count > 0
@@ -237,7 +243,13 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
     @override_waffle_flag(EXAMS_IDA, active=True)
     @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.special_exams.get_attempt_status_summary')
     def test_exams_ida_flag_on(self, mock_get_attempt_status_summary):
-        self.get_blocks_and_check_against_expected(self.staff, self.ALL_BLOCKS)
+        self.transformers = BlockStructureTransformers([self.TRANSFORMER_CLASS_TO_TEST(True)])
+        self.course.enable_subsection_gating = True
+        self.setup_gated_section(self.blocks['H'], self.blocks['A'])
+        expected_blocks = (
+            'course', 'A', 'B', 'C', 'ProctoredExam', 'D', 'E', 'PracticeExam', 'F', 'G', 'TimedExam', 'J', 'K', 'H',
+            'I')  # lint-amnesty, pylint: disable=line-too-long
+        self.get_blocks_and_check_against_expected(self.user, expected_blocks)
 
         # Ensure that no calls are made to get_attempt_status_summary
         assert mock_get_attempt_status_summary.call_count == 0
