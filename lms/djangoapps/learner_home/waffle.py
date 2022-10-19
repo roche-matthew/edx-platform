@@ -4,6 +4,7 @@ waffle switches for the teams app.
 """
 
 from edx_toggles.toggles import WaffleFlag
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 # .. toggle_name: learner_home_mfe.enabled
 # .. toggle_implementation: WaffleFlag
@@ -16,3 +17,7 @@ ENABLE_LEARNER_HOME_MFE = WaffleFlag(
     'learner_home_mfe.enabled',
     __name__,
 )
+
+def should_redirect_to_learner_home_mfe():
+    return configuration_helpers.get_value('ENABLE_LEARNER_HOME_MFE',
+                                           ENABLE_LEARNER_HOME_MFE.is_enabled())
