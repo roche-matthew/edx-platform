@@ -24,6 +24,7 @@ from ..data import (
     CourseSectionData,
     CourseVisibility,
     ExamData,
+    SpecialExamAttemptData,
     UserCourseOutlineData,
     UserCourseOutlineDetailsData,
     VisibilityData
@@ -286,9 +287,15 @@ def get_user_course_outline_details(course_key: CourseKey,
         schedule_processor = processors['schedule']
         schedule = schedule_processor.schedule_data(user_course_outline)
 
-    with function_trace('learning_sequences.api.get_user_course_outline_details.special_exams'):
-        special_exams_processor = processors['special_exams']
-        special_exam_attempts = special_exams_processor.exam_data(user_course_outline)
+    # with function_trace('learning_sequences.api.get_user_course_outline_details.special_exams'):
+    #     special_exams_processor = processors['special_exams']
+    #     special_exam_attempts = SpecialExamAttemptData(
+    #         sequences={},
+    #     )#special_exams_processor.exam_data(user_course_outline)
+    
+    special_exam_attempts = SpecialExamAttemptData(
+        sequences={},
+    )
 
     return UserCourseOutlineDetailsData(
         outline=user_course_outline,

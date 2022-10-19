@@ -47,51 +47,54 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
         different OutlineProcessor.
         """
         sequences = {}
-        if self.special_exams_enabled:
-            for section in pruned_course_outline.sections:
-                for sequence in section.sequences:
-                    # Don't bother checking for information
-                    # on non-exam sequences
-                    if not bool(sequence.exam):
-                        continue
+        # if self.special_exams_enabled:
+        #     for section in pruned_course_outline.sections:
+        #         for sequence in section.sequences:
+        #             # Don't bother checking for information
+        #             # on non-exam sequences
+        #             if not bool(sequence.exam):
+        #                 continue
 
-                    special_exam_attempt_context = None
+        #             special_exam_attempt_context = None
+                    
+        #             print("**************************GETS HERE********************************")
 
-                    # if exams waffle flag enabled, get exam type internally
-                    if exams_ida_enabled(self.course_key):
-                        # add short description based on exam type
-                        if sequence.exam.is_practice_exam:
-                            exam_type = _('Practice Exam')
-                        elif sequence.exam.is_proctored_enabled:
-                            exam_type = _('Proctored Exam')
-                        elif sequence.exam.is_time_limited:
-                            exam_type = _('Timed Exam')
-                        else:  # sets a default, though considered impossible
-                            log.info('Using a default value, but it is considered impossible.')
-                            exam_type = _('Exam')
+        #             # if exams waffle flag enabled, get exam type internally
+        #             if exams_ida_enabled(self.course_key):
+        #                 print("**************************GETS HERE********************************")
+        #                 # add short description based on exam type
+        #                 if sequence.exam.is_practice_exam:
+        #                     exam_type = _('Practice Exam')
+        #                 elif sequence.exam.is_proctored_enabled:
+        #                     exam_type = _('Proctored Exam')
+        #                 elif sequence.exam.is_time_limited:
+        #                     exam_type = _('Timed Exam')
+        #                 else:  # sets a default, though considered impossible
+        #                     log.info('Using a default value, but it is considered impossible.')
+        #                     exam_type = _('Exam')
 
-                        summary = {'short_description': exam_type, }
-                        special_exam_attempt_context = summary
-                    else:
-                        try:
-                            # Calls into edx_proctoring subsystem to get relevant special exam information.
-                            # This will return None, if (user, course_id, content_id) is not applicable.
-                            special_exam_attempt_context = get_attempt_status_summary(
-                                self.user.id,
-                                str(self.course_key),
-                                str(sequence.usage_key)
-                            )
-                        except ProctoredExamNotFoundException:
-                            log.info(
-                                'No exam found for {sequence_key} in {course_key}'.format(
-                                    sequence_key=sequence.usage_key,
-                                    course_key=self.course_key
-                                )
-                            )
+        #                 summary = {'short_description': exam_type, }
+        #                 special_exam_attempt_context = summary
+        #             else:
+        #                 try:
+        #                     # Calls into edx_proctoring subsystem to get relevant special exam information.
+        #                     # This will return None, if (user, course_id, content_id) is not applicable.
+        #                     special_exam_attempt_context = get_attempt_status_summary(
+        #                         self.user.id,
+        #                         str(self.course_key),
+        #                         str(sequence.usage_key)
+        #                     )
+        #                 except ProctoredExamNotFoundException:
+        #                     log.info(
+        #                         'No exam found for {sequence_key} in {course_key}'.format(
+        #                             sequence_key=sequence.usage_key,
+        #                             course_key=self.course_key
+        #                         )
+        #                     )
 
-                    if special_exam_attempt_context:
-                        # Return exactly the same format as the edx_proctoring API response
-                        sequences[sequence.usage_key] = special_exam_attempt_context
+        #             if special_exam_attempt_context:
+        #                 # Return exactly the same format as the edx_proctoring API response
+        #                 sequences[sequence.usage_key] = special_exam_attempt_context
 
         return SpecialExamAttemptData(
             sequences=sequences,

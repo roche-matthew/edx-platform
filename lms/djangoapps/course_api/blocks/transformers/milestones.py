@@ -200,7 +200,6 @@ class MilestonesAndSpecialExamsTransformer(BlockStructureTransformer):
                     str(block_key.course_key),
                     str(block_key)
                 )
-
             except ProctoredExamNotFoundException as ex:
                 log.exception(ex)
 
