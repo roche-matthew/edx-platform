@@ -100,6 +100,15 @@ class AccessRole(metaclass=ABCMeta):
         """
         pass  # lint-amnesty, pylint: disable=unnecessary-pass
 
+    '''PATCH'''
+    @abstractmethod
+    def az_add_users(self, *users):
+        """
+        Add the role to the supplied django users.
+        """
+        pass  # lint-amnesty, pylint: disable=unnecessary-pass
+    '''PATCH END'''
+
     @abstractmethod
     def remove_users(self, *users):
         """
@@ -125,6 +134,11 @@ class GlobalStaff(AccessRole):
     def add_users(self, *users):
         for user in users:
             if user.is_authenticated and user.is_active:
+                user.is_staff = True
+                user.save()
+    def az_add_users(self, *users):
+        for user in users:
+            if user.is_active:
                 user.is_staff = True
                 user.save()
 
@@ -191,6 +205,22 @@ class RoleBase(AccessRole):
                 entry.save()
                 if hasattr(user, '_roles'):
                     del user._roles
+
+    '''PATCH CODE START'''
+    def az_add_users(self, *users):
+        """
+        Add the supplied django users to this role.
+        """
+        # silently ignores anonymous and inactive users so that any that are
+        # legit get updated.
+        from common.djangoapps.student.models import CourseAccessRole  # lint-amnesty, pylint: disable=redefined-outer-name, reimported
+        for user in users:
+            #if user.is_authenticated and user.is_active and not self.has_user(user):
+            entry = CourseAccessRole(user=user, role=self._role_name, course_id=self.course_key, org=self.org)
+            entry.save()
+            if hasattr(user, '_roles'):
+                del user._roles
+    '''PATCH CODE END'''
 
     def remove_users(self, *users):
         """

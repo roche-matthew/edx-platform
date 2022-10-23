@@ -135,6 +135,18 @@ def has_studio_read_access(user, course_key):
     """
     return bool(STUDIO_VIEW_CONTENT & get_user_permissions(user, course_key))
 
+'''PATCH CODE START'''
+def az_add_users(caller, role, *users):
+    """
+    The caller requests adding the given users to the role. Checks that the caller
+    has sufficient authority.
+
+    :param caller: a user
+    :param role: an AccessRole
+    """
+    #_check_caller_authority(caller, role)
+    role.az_add_users(*users)
+'''PATCH CODE END'''
 
 def add_users(caller, role, *users):
     """

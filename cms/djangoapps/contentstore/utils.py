@@ -34,6 +34,20 @@ from xmodule.partitions.partitions_service import get_all_partitions_for_course 
 
 log = logging.getLogger(__name__)
 
+'''
+PATCH CODE START
+'''
+def az_add_instructor(course_key, requesting_user, new_instructor):
+    """
+    Adds given user as instructor and staff to the given course,
+    after verifying that the requesting_user has permission to do so.
+    """
+    # can't use auth.add_users here b/c it requires user to already have Instructor perms in this course
+    CourseInstructorRole(course_key).az_add_users(new_instructor)
+    auth.az_add_users(requesting_user, CourseStaffRole(course_key), new_instructor)
+'''
+PATCH CODE END
+'''
 
 def add_instructor(course_key, requesting_user, new_instructor):
     """

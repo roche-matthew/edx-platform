@@ -30,9 +30,10 @@ from milestones import api as milestones_api
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.locator import BlockUsageLocator
+from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
 from organizations.api import add_organization_course, ensure_organization
 from organizations.exceptions import InvalidOrganizationException
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 
 from cms.djangoapps.course_creators.views import add_user_with_status_unrequested, get_course_creator_status
 from cms.djangoapps.models.settings.course_grading import CourseGradingModel
@@ -95,6 +96,7 @@ from ..tasks import rerun_course as rerun_course_task
 from ..toggles import split_library_view_on_dashboard
 from ..utils import (
     add_instructor,
+    az_add_instructor,
     get_lms_link_for_item,
     get_proctored_exam_settings_url,
     initialize_permissions,
@@ -118,7 +120,7 @@ from .library import (
 log = logging.getLogger(__name__)
 User = get_user_model()
 
-__all__ = ['course_info_handler', 'course_handler', 'course_listing',
+__all__ = ['course_info_handler', 'course_handler', 'course_handler_with_access_token', 'course_listing',
            'course_info_update_handler', 'course_search_index_handler',
            'course_rerun_handler',
            'settings_handler',
@@ -840,6 +842,193 @@ def course_outline_initial_state(locator_to_show, course_structure):
         'expanded_locators': expanded_locators
     }
 
+'''
+----------------- PATCH CODE ------------------
+'''
+@authentication_classes((BearerAuthenticationAllowInactiveUser,))
+#@permission_classes((IsAuthenticated,)) # doesn't work
+def course_handler_with_access_token(request):
+    
+    try:
+        #bearer authenticate
+        initBearer = BearerAuthenticationAllowInactiveUser()
+        user, token = initBearer.authenticate(request)
+        #extract user details cookie
+        userdetails = json.loads(request.COOKIES['edx_course_authorizer'])
+
+        if(len(userdetails['userid'])<1):
+            raise PermissionDenied()
+        if(len(userdetails['username'])<1):
+            raise PermissionDenied()
+        if(len(userdetails['email'])<1):
+            raise PermissionDenied()
+        #assign request.user details
+        request.user.username = userdetails['username']
+        request.user.id = userdetails['userid']
+        request.user.pk = userdetails['userid']
+        request.user.email = userdetails['email']
+
+        log.info("username: %s id: %s pk: %s email: %s", request.user.username, request.user.id, request.user.pk, request.user.email)
+        if request.method == 'POST':
+            return _az_create_or_rerun_course(request)  
+        return HttpResponseNotFound()
+    except AuthenticationFailed as ex:
+        log.warn(str(ex)) #understand request
+        return JsonResponse({"ex":str(ex)},
+            status=403
+        )
+    except Exception as ex:
+        log.info("[course_handler_with_access_token] request-ex: %s", str(ex)) #understand request
+        raise Http404
+
+def az_has_perm(arg1=None, arg2=None):
+    return True
+
+@expect_json
+def _az_create_or_rerun_course(request):
+    """
+    To be called by requests that create a new destination course (i.e., create_new_course and rerun_course)
+    Returns the destination course_key and overriding fields for the new course.
+    Raises DuplicateCourseError and InvalidKeyError
+    """
+    try:
+        request.user.is_staff = True
+        request.user.is_active = True
+        request.user.is_superuser = True
+        #request.user.is_anonymous = False # causes 404
+        request.user.has_perm = az_has_perm
+        #request.user.is_authenticated = True # causes 404
+        
+        org = request.json.get('org')
+        course = request.json.get('number', request.json.get('course'))
+        display_name = request.json.get('display_name')
+        # force the start date for reruns and allow us to override start via the client
+        start = request.json.get('start', CourseFields.start.default)
+        run = request.json.get('run')
+        #has_course_creator_role = is_content_creator(request.user, org)
+
+        #if not has_course_creator_role:
+        #    raise PermissionDenied()
+
+        # allow/disable unicode characters in course_id according to settings
+        if not settings.FEATURES.get('ALLOW_UNICODE_COURSE_ID'):
+            if _has_non_ascii_characters(org) or _has_non_ascii_characters(course) or _has_non_ascii_characters(run):
+                return JsonResponse(
+                    {'error': _('Special characters not allowed in organization, course number, and course run.')},
+                    status=400
+                )
+
+        fields = {'start': start}
+        if display_name is not None:
+            fields['display_name'] = display_name
+
+        # Set a unique wiki_slug for newly created courses. To maintain active wiki_slugs for
+        # existing xml courses this cannot be changed in CourseBlock.
+        # # TODO get rid of defining wiki slug in this org/course/run specific way and reconcile
+        # w/ xmodule.course_module.CourseBlock.__init__
+        wiki_slug = f"{org}.{course}.{run}"
+        definition_data = {'wiki_slug': wiki_slug}
+        fields.update(definition_data)
+
+        source_course_key = request.json.get('source_course_key')
+        if source_course_key:
+            source_course_key = CourseKey.from_string(source_course_key)
+            destination_course_key = az_rerun_course(request.user, source_course_key, org, course, run, fields)
+            return JsonResponse({
+                'url': reverse_url('course_handler'),
+                'destination_course_key': str(destination_course_key)
+            })
+        else:
+            try:
+                new_course = create_new_course(request.user, org, course, run, fields)
+                return JsonResponse({
+                    'url': reverse_course_url('course_handler', new_course.id),
+                    'course_key': str(new_course.id),
+                })
+            except ValidationError as ex:
+                return JsonResponse({'error': str(ex)}, status=400)
+    except DuplicateCourseError:
+        return JsonResponse({
+            'ErrMsg': _(
+                'There is already a course defined with the same '
+                'organization and course number. Please '
+                'change either organization or course number to be unique.'
+            ),
+            'OrgErrMsg': _(
+                'Please change either the organization or '
+                'course number so that it is unique.'),
+            'CourseErrMsg': _(
+                'Please change either the organization or '
+                'course number so that it is unique.'),
+        })
+    except InvalidKeyError as error:
+        return JsonResponse({
+            "ErrMsg": _("Unable to create course '{name}'.\n\n{err}").format(name=display_name, err=str(error))}
+        )
+    except PermissionDenied as error:  # pylint: disable=unused-variable
+        log.info(
+            "User does not have the permission to create course in this organization"
+            "or course creation is disabled."
+            "User: '%s' Org: '%s' Course #: '%s'.",
+            request.user.id,
+            org,
+            course,
+        )
+        return JsonResponse({
+            'error': _('User does not have the permission to create courses in this organization '
+                       'or course creation is disabled')},
+            status=403
+        )
+
+def az_rerun_course(user, source_course_key, org, number, run, fields, background=True):
+    """
+    Rerun an existing course.
+    """
+    # verify user has access to the original course
+    #if not has_studio_write_access(user, source_course_key):
+    #    raise PermissionDenied()
+    log.info("[az_rerun_course] called!")
+    # create destination course key
+    store = modulestore()
+    with store.default_store('split'):
+        destination_course_key = store.make_course_key(org, number, run)
+
+    # verify org course and run don't already exist
+    if store.has_course(destination_course_key, ignore_case=True):
+        raise DuplicateCourseError(source_course_key, destination_course_key)
+
+    # Make sure user has instructor and staff access to the destination course
+    # so the user can see the updated status for that course
+    # raises PermissionDenied if user.is_authenticated == False
+    try:
+        az_add_instructor(destination_course_key, user, user)
+    except Exception as ex:
+        log.warn(str(ex))
+    
+    # Mark the action as initiated
+    try:
+        CourseRerunState.objects.initiated(source_course_key, destination_course_key, user, fields['display_name'])
+    except Exception as ex:
+        log.warn(str(ex))
+
+    # Clear the fields that must be reset for the rerun
+    fields['advertised_start'] = None
+    fields['enrollment_start'] = None
+    fields['enrollment_end'] = None
+    fields['video_upload_pipeline'] = {}
+
+    json_fields = json.dumps(fields, cls=EdxJSONEncoder)
+    args = [str(source_course_key), str(destination_course_key), user.id, json_fields]
+
+    if background:
+        rerun_course_task.delay(*args)
+    else:
+        rerun_course_task(*args)
+
+    return destination_course_key
+'''
+END OF PATCH CODE
+'''
 
 @expect_json
 def _create_or_rerun_course(request):
@@ -849,6 +1038,9 @@ def _create_or_rerun_course(request):
     Raises DuplicateCourseError and InvalidKeyError
     """
     try:
+        log.info("request: %s",request) #understand request
+        log.info("request.user: %s",request.user) #understand request.user
+
         org = request.json.get('org')
         course = request.json.get('number', request.json.get('course'))
         display_name = request.json.get('display_name')
